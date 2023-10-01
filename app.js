@@ -11,6 +11,137 @@ const chart = new Chart(ctx, {
     }
 });
 
+const canvas0 = document.getElementById('Ampl');
+const ctx0 = canvas0.getContext('2d');
+const chart0 = new Chart(ctx0, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [],
+    },
+    options: {
+        responsive: false, //Вписывать в размер canvas
+    }
+});
+
+const canvas1 = document.getElementById('Faz');
+const ctx1 = canvas1.getContext('2d');
+const chart1 = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [],
+    },
+    options: {
+        responsive: false, //Вписывать в размер canvas
+    }
+});
+
+function Rebuild(){
+    if (chart.data.datasets.length > 0){
+        const lastDataset = chart.data.datasets[chart.data.datasets.length - 1];
+        const N = lastDataset.data.length;
+        let K = document.getElementById('K').value;
+
+        // Получите данные из последнего датасета
+        const signal = lastDataset.data;
+
+        const selectedSignal = selectEquallySpacedElements(signal, K);
+
+        // Выполните DFT на выбранных элементах
+        const result = discreteFourierTransform(selectedSignal);
+
+        let ampl=[];
+        let lbl=[];
+        let faz=[];
+        result.forEach((value,index)=>{
+            lbl.push(index+1);
+            ampl.push(Math.sqrt(value.real*value.real+value.imag*value.imag));
+            faz.push(Math.atan2(value.real, value.imag));
+        })
+
+        chart0.data.labels=lbl;
+        chart0.data.datasets=[
+            {
+                label: 'ampl', //Метка
+                data: ampl, //Данные
+                backgroundColor: 'red',
+            }]
+        chart0.update();
+
+        chart1.data.labels=lbl;
+        chart1.data.datasets=[
+            {
+                label: 'faz', //Метка
+                data: faz, //Данные
+                backgroundColor: 'red',
+            }]
+        chart1.update();
+
+        let points=[];
+        for( let n=0; n<N;n++){
+            let sum=ampl[0]/2;
+            let t=n/N;
+            for  (let R=1; R<K/2-1; R++){
+                sum+=ampl[R]*Math.sin(2*Math.PI*R*t+faz[R]);
+            }
+            points.push(sum);
+        }
+        chart.data.datasets.push(
+            {
+                label: "reset",
+                data: points,
+                borderColor: 'blue',
+                borderWidth: 2,
+                fill: false
+            }
+        );
+        chart.update();
+    }
+}
+
+// Функция для выбора K элементов равномерно из N
+function selectEquallySpacedElements(inputSignal, K) {
+    const N = inputSignal.length;
+    let step;
+    let selectedSignal = [];
+    selectedSignal.push(inputSignal[0])
+    if (K > 2) {
+        if (N === K) {
+            step = 1;
+        } else step = Math.floor((N - 2) / (K - 1));
+        for (let i = 1; i <= K - 2; i++) {
+            selectedSignal.push(inputSignal[i * step]);
+        }
+    }
+    selectedSignal.push(inputSignal[N - 1]);
+
+    return selectedSignal;
+}
+
+// Функция для выполнения дискретного преобразования Фурье (DFT)
+function discreteFourierTransform(inputSignal) {
+    const N = inputSignal.length;
+    let outputSignal = new Array(N);
+
+    for (let k = 0; k < N; k++) {
+        let realPart = 0;
+        let imagPart = 0;
+
+        for (let n = 0; n < N; n++) {
+            const angle = (2 * Math.PI * k * n) / N;
+            realPart += inputSignal[n] * Math.cos(angle);
+            imagPart += inputSignal[n] * Math.sin(angle);
+        }
+
+        realPart=(realPart*2)/N;
+        imagPart=(imagPart*2)/N;
+        outputSignal[k] = { real: realPart, imag: imagPart };
+    }
+
+    return outputSignal;
+}
+
 function getRandomColor() {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -22,7 +153,7 @@ function getRandomColor() {
 
 function generateTimeArray(Ns) {
     let t = [];
-    for (let N = 0; N < 3 * Ns; N++) {
+    for (let N = 0; N < Ns; N++) {
         t.push(N);
     }
     return t;
@@ -30,19 +161,19 @@ function generateTimeArray(Ns) {
 
 function generateSinSignal(t, amplitude, frequency, phase) {
     return t.map(function (N) {
-        return amplitude * Math.sin((2 * Math.PI * frequency * N) / t.length * 3 + (phase * Math.PI / 180));
+        return amplitude * Math.sin((2 * Math.PI * frequency * N) / t.length + (phase * Math.PI / 180));
     });
 }
 
 function generateTRSignal(t, amplitude, frequency, phase) {
     return t.map(function (N) {
-        return 2 * amplitude / Math.PI * Math.abs(Math.abs(((2 * Math.PI * frequency * N) / t.length * 3 + phase * Math.PI / 180 - Math.PI / 2) % (2 * Math.PI)) - Math.PI) - amplitude;
+        return 2 * amplitude / Math.PI * Math.abs(Math.abs(((2 * Math.PI * frequency * N) / t.length  + phase * Math.PI / 180 - Math.PI / 2) % (2 * Math.PI)) - Math.PI) - amplitude;
     });
 }
 
 function generateSQSignal(t, amplitude, frequency, phase) {
     return t.map(function (N) {
-        if (Math.abs(((2 * Math.PI * frequency * N) / t.length * 3 + phase * Math.PI / 180) % (2 * Math.PI)) / (2 * Math.PI) <= 0.5) {
+        if (Math.abs(((2 * Math.PI * frequency * N) / t.length + phase * Math.PI / 180) % (2 * Math.PI)) / (2 * Math.PI) <= 0.5) {
             return amplitude
         } else {
             return -amplitude;
@@ -94,12 +225,10 @@ function Sum() {
             })
 
         chart.update();
-        //    console.log(data, chart.data.datasets);
     }
 }
 
 function Add() {
-    console.log(chart);
     let amplitude = document.getElementById('amplitude').value;
     let frequency = document.getElementById('frequency').value;
     let phase = document.getElementById('phase').value;
@@ -107,7 +236,6 @@ function Add() {
     let time = generateTimeArray(N);
     let type = document.getElementById("select").value;
     let info;
-    console.log(type);
     switch (type) {
         case '0':
             info = generateSinSignal(time, amplitude, frequency, phase);
@@ -121,7 +249,6 @@ function Add() {
     }
 
     chart.data.labels = time;
-    console.log(chart);
     chart.data.datasets.push(
         {
             label: "",

@@ -34,6 +34,19 @@
     <button onclick="Sum()">Суммировать</button>
     <button onclick="Reset()">Очистить</button>
 </div>
+<div>
+    <div>
+        <form>
+            <label for="K">K: </label>
+            <input type="number" id="K" step="1" min="10" value="32" required>
+        </form>
+        <button onclick="Rebuild()">Восстановить сигнал</button>
+    </div>
+    <div>
+        <canvas id="Faz" width="400" height="400"></canvas>
+        <canvas id="Ampl" width="400" height="400"></canvas>
+    </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
