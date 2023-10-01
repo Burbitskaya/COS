@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Signal Graphs</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900'
+          rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div>
+    <form>
+        <select id="select" required>
+            <option value="0">Синусоидальный</option>
+            <option value="1">Треугольный</option>
+            <option value="2">Прямоугольный</option>
+        </select>
+        <label for="amplitude">А: </label>
+        <input type="number" id="amplitude" step="0.1" value="1" required>
+        <label for="frequency">f: </label>
+        <input type="number" id="frequency" step="1" value="1" required>
+        <label for="phase">Фаза(гр.): </label>
+        <input type="number" id="phase" step="0.1" value="0" required>
+        <label for="N">N: </label>
+        <input type="number" id="N" step="512" min="512" value="512" required>
+    </form>
+    <button onclick="Add()">Добавить график</button>
+</div>
+<canvas id="Chart" width="1000" height="600"></canvas>
+<div>
+    <button onclick="Sum()">Суммировать</button>
+    <button onclick="Reset()">Очистить</button>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
