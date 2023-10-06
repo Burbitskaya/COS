@@ -42,10 +42,25 @@
         </form>
         <button onclick="Rebuild()">Восстановить сигнал</button>
     </div>
-    <div>
-        <canvas id="Faz" width="400" height="400"></canvas>
-        <canvas id="Ampl" width="400" height="400"></canvas>
+    <div class="amplfaz">
+        <div>
+            <canvas id="Faz" width="500" height="500"></canvas>
+        </div>
+        <div>
+            <table id="myTable">
+                <tbody>
+                <tr>
+                    <td>realPart</td>
+                    <td>imagPart</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <canvas id="Ampl" width="500" height="500"></canvas>
+        </div>
     </div>
+
 </div>
 <script src="app.js"></script>
 </body>

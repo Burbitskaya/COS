@@ -123,7 +123,7 @@ function selectEquallySpacedElements(inputSignal, K) {
 function discreteFourierTransform(inputSignal) {
     const N = inputSignal.length;
     let outputSignal = new Array(N);
-
+    removeRow();
     for (let k = 0; k < N; k++) {
         let realPart = 0;
         let imagPart = 0;
@@ -133,13 +133,31 @@ function discreteFourierTransform(inputSignal) {
             realPart += inputSignal[n] * Math.cos(angle);
             imagPart += inputSignal[n] * Math.sin(angle);
         }
-
         realPart=(realPart*2)/N;
         imagPart=(imagPart*2)/N;
+        addRow(realPart, imagPart);
         outputSignal[k] = { real: realPart, imag: imagPart };
     }
 
     return outputSignal;
+}
+
+function removeRow(){
+    let tbody=document.getElementById("myTable").getElementsByTagName("tbody")[0];
+    for(let i=1; i<tbody.rows.length;i++) {
+        tbody.deleteRow(i);
+    }
+}
+function addRow(real, imag){
+    let tbody=document.getElementById("myTable").getElementsByTagName("tbody")[0];
+    let row=document.createElement("tr");
+    let td1=document.createElement("td");
+    td1.appendChild(document.createTextNode(real));
+    let td2=document.createElement("td");
+    td2.appendChild(document.createTextNode(imag));
+    row.appendChild(td1);
+    row.appendChild(td2);
+    tbody.appendChild(row);
 }
 
 function getRandomColor() {
