@@ -19,7 +19,7 @@
             <option value="2">Прямоугольный</option>
         </select>
         <label for="amplitude">А: </label>
-        <input type="number" id="amplitude" step="0.1" value="1" required>
+        <input type="number" id="amplitude" step="0.1" value="50" required>
         <label for="frequency">f: </label>
         <input type="number" id="frequency" step="1" value="1" required>
         <label for="phase">Фаза(гр.): </label>
@@ -28,19 +28,51 @@
         <input type="number" id="N" step="512" min="512" value="512" required>
     </form>
     <button onclick="Add()">Добавить график</button>
+    <button onclick="AddNoise()">Добавить шум</button>
 </div>
-<canvas id="Chart" width="1000" height="600"></canvas>
+<div class="cht">
+    <div>
+        <canvas id="Chart" width="900" height="500"></canvas>
+    </div>
+        <div>
+            <form>
+                <h2>Сглаживание:</h2>
+                <select id="smooth" required>
+                    <option value="0">Скользящее усреднение</option>
+                    <option value="1">Параболой</option>
+                    <option value="2">Медианное усреднение</option>
+                </select>
+                <label for="N">Размер окна: </label>
+                <input type="number" id="window1" step="1" min="1" value="31" required>
+                <label for="N">К для медианного усреднения: </label>
+                <input type="number" id="medK" step="1" min="1" value="3" required>
+            </form>
+            <button onclick="Smooth()">Применить</button>
+        </div>
+</div>
 <div>
     <button onclick="Sum()">Суммировать</button>
     <button onclick="Reset()">Очистить</button>
 </div>
 <div>
+    <div class="cht">
     <div>
         <form>
+            <h2>Восстановление:</h2>
             <label for="K">K: </label>
-            <input type="number" id="K" step="1" min="10" value="32" required>
+            <input type="number" id="K" step="1" min="8" value="32" required>
         </form>
         <button onclick="Rebuild()">Восстановить сигнал</button>
+    </div>
+    <div>
+        <form>
+            <h2>Фильтрация:</h2>
+            <label for="N">Min:</label>
+            <input type="number" id="minF" step="1" min="1" required>
+            <label for="N">Max:</label>
+            <input type="number" id="maxF" step="1" min="1" required>
+        </form>
+    </div>
     </div>
     <div class="amplfaz">
         <div>
@@ -61,6 +93,18 @@
         </div>
     </div>
 
+</div>
+<div>
+    <h2>Ядра</h2>
+    <div class="cht">
+    <button onclick="Imagination(0)">Блюр</button>
+    <button onclick="Imagination(1)">Негатив</button>
+    <button onclick="Imagination(2)">Резкость</button>
+    <button onclick="Imagination(3)">Рельеф</button>
+    </div>
+    <h2>
+    <canvas id="im" height="640" width="480"></canvas>
+    </h2>
 </div>
 <script src="app.js"></script>
 </body>

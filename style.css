@@ -2,3 +2,13 @@
     display: flex;
     justify-content: space-between;
 }
+
+.cht{
+    display: flex;
+    justify-content: space-around;
+    margin: 10px;
+}
+
+h2{
+    text-align: center;
+}
