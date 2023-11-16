@@ -37,6 +37,7 @@ const chart1 = new Chart(ctx1, {
     }
 });
 
+
 function Rebuild() {
     if (chart.data.datasets.length > 0) {
         const lastDataset = chart.data.datasets[chart.data.datasets.length - 1];
@@ -47,14 +48,14 @@ function Rebuild() {
 
         // // Получите данные из последнего датасета
         const signal = lastDataset.data;
-        const selectedSignal = discreteFourierTransform(signal);
-        const result = selectedSignal.slice(0, K);
+        // const selectedSignal = discreteFourierTransform(signal);
+        //const result = selectedSignal.slice(0, K);
         // console.log(result);
-        // const result = selectEquallySpacedElements(selectedSignal, K);
+        //  const result = selectEquallySpacedElements(selectedSignal, K);
         // Выполните DFT на выбранных элементах
         // const selectedSignal=signal.slice(0,K);
-        //   const selectedSignal = selectEquallySpacedElements(signal, K);
-        //  let result = discreteFourierTransform(selectedSignal);
+        const selectedSignal = selectEquallySpacedElements(signal, K);
+        let result = discreteFourierTransform(selectedSignal);
 
         let ampl = [];
         let lbl = [];
@@ -66,18 +67,32 @@ function Rebuild() {
             lbl.push(index);
             ampl.push(Math.sqrt(value.real * value.real + value.imag * value.imag));
             lblA.push(index);
-            faz.push(Math.atan2(value.real, value.imag));
+          // let myfaz = Math.atan2(value.imag, value.real);
+            let myfaz = Math.atan(value.imag?value.real/value.imag:0);
+            // if (myfaz < 0 && myfaz >= -Math.PI / 2) {
+            //     myfaz = -Math.PI / 2 - myfaz;
+            // } else if (myfaz >= 0 && myfaz <= Math.PI / 2) {
+            //     myfaz = Math.PI / 2 - myfaz;
+            // }
+            //  else if(myfaz < -Math.PI / 2) {
+            //     myfaz = -Math.PI - myfaz;
+            // } else if (myfaz > Math.PI / 2) {
+            //     myfaz = Math.PI - myfaz;
+            // }
+            faz.push(myfaz);
             addRow(value.real.toFixed(5), value.imag.toFixed(5));
         })
 
         if (min) {
             for (let i = 0; i < min; i++) {
                 ampl[i] = 0;
+                faz[i] = 0;
             }
         }
         if (max) {
             for (let i = result.length - 1; i > max; i--) {
                 ampl[i] = 0;
+                faz[i] = 0;
             }
         }
         chart0.data.labels = lblA;
@@ -89,6 +104,11 @@ function Rebuild() {
             }]
         chart0.update();
 
+        for (let i = 0; i < faz.length; i++) {
+            if (ampl[i] < 0.5) {
+                faz[i] = 0;
+            }
+        }
         chart1.data.labels = lbl;
         chart1.data.datasets = [
             {
@@ -102,12 +122,12 @@ function Rebuild() {
         for (let n = 0; n < N; n++) {
             let sum = ampl[0] / 2;
             let t = n / N;
-            for (let R = 0; R < K / 2 - 1; R++) {
+            for (let R = 1; R < K / 2; R++) {
                 sum += ampl[R] * Math.sin(2 * Math.PI * R * t + faz[R]);
             }
-
             points.push(sum);
         }
+
 
         chart.data.datasets.push(
             {
@@ -124,15 +144,36 @@ function Rebuild() {
 
 // Функция для выбора K элементов равномерно из N
 function selectEquallySpacedElements(inputSignal, K) {
+    // const N = inputSignal.length;
+    // let step;
+    // let selectedSignal = [];
+    // selectedSignal.push(inputSignal[0])
+    // step = Math.floor((N - 1) / (K - 1));
+    // for (let i = 1; i <= K - 2; i++) {
+    //     selectedSignal.push(inputSignal[(i * step)]);
+    // }
+    // selectedSignal.push(inputSignal[N - 1]);
+    // return selectedSignal;
     const N = inputSignal.length;
-    let step;
+    const centerIndex = Math.floor(N / 2); // Индекс центральной точки
+    const step = Math.floor(N / K); // Шаг для выбора точек до и после центра
     let selectedSignal = [];
-    selectedSignal.push(inputSignal[0])
-    step = Math.floor((N - 1) / (K - 1));
-    for (let i = 1; i <= K - 2; i++) {
-        selectedSignal.push(inputSignal[(i * step)]);
+
+    // Добавляем центральную точку, если K нечетное
+    // if (K % 2 === 1) {
+    //     selectedSignal.push(inputSignal[centerIndex]);
+    // }
+    // Добавляем точки до и после центра
+    for (let i = K / 2; i >= 1; i--) {
+        selectedSignal.push(inputSignal[centerIndex - i * step]);
     }
-    selectedSignal.push(inputSignal[N - 1]);
+
+    // selectedSignal.push(inputSignal[centerIndex]);
+
+    for (let i = 0; i < K / 2; i++) {
+        selectedSignal.push(inputSignal[centerIndex + i * step]);
+    }
+
     return selectedSignal;
 }
 
@@ -372,7 +413,7 @@ function fourthDegreeParabola(y) {
                 198.0 * GetOrZero(y, i + 5) +
                 110.0 * GetOrZero(y, i + 6));
 
-        smoothedValues.push({x: i, y: smoothedValue});
+        smoothedValues.push( smoothedValue);
     }
 
     return smoothedValues;
@@ -394,7 +435,7 @@ function movingAverages(y) {
         }
 
         let average = sum / window;
-        smoothedValues.push({x: j, y: average});
+        smoothedValues.push( average);
     }
 
     return smoothedValues;
@@ -433,9 +474,9 @@ function movingMedian(y) {
                     .slice(K, K + elementsToKeep)
                     .reduce((acc, val) => acc + val, 0) /
                 elementsToKeep / 1.0;
-            antialiasedValues.push({x: i, y: result});
+            antialiasedValues.push(result);
         } else {
-            antialiasedValues.push({x: i, y: 0});
+            antialiasedValues.push( 0);
         }
     }
 
@@ -446,6 +487,9 @@ function Smooth() {
     let y = chart.data.datasets[chart.data.datasets.length - 1].data;
     let smooth = document.getElementById('smooth').value;
     let info;
+    // if(y[0].y){
+    //     y=y.y;
+    // }
     switch (smooth) {
         case '0':
             info = movingAverages(y);
@@ -460,13 +504,14 @@ function Smooth() {
 
     chart.data.datasets.push(
         {
-            label: "",
+            label: "сглаженное",
             data: info,
             borderColor: getRandomColor(),
             borderWidth: 2,
             fill: false
         }
     );
+
     chart.update();
 
 }
@@ -487,7 +532,7 @@ function Imagination(type) {
     let pix = imgd.data;
     let width = imgd.width;
     let height = imgd.height;
-    let matrix,div,offset;
+    let matrix, div, offset;
     switch (type) {
         case 0:
             div = 9;
@@ -521,9 +566,9 @@ function Imagination(type) {
                 for (let k = 0; k < matrix[j].length; k++) {
                     const xx = Math.min(width - 1, Math.max(0, x + k - Math.floor(matrix.length / 2)));
 
-                    r += pix[4*(yy * width + xx)] * matrix[j][k];
-                    g += pix[4*(yy * width + xx)+1] * matrix[j][k];
-                    b += pix[4*(yy * width + xx)+2]* matrix[j][k];
+                    r += pix[4 * (yy * width + xx)] * matrix[j][k];
+                    g += pix[4 * (yy * width + xx) + 1] * matrix[j][k];
+                    b += pix[4 * (yy * width + xx) + 2] * matrix[j][k];
                 }
             }
 
@@ -531,9 +576,9 @@ function Imagination(type) {
             g = Math.min(255, Math.max(0, offset + (g / div))) & 0xFF;
             b = Math.min(255, Math.max(0, offset + (b / div))) & 0xFF;
 
-            imgd.data[4*(y * width + x)]=r;
-            imgd.data[4*(y * width + x)+1]=g;
-            imgd.data[4*(y * width + x)+2]=b;
+            imgd.data[4 * (y * width + x)] = r;
+            imgd.data[4 * (y * width + x) + 1] = g;
+            imgd.data[4 * (y * width + x) + 2] = b;
 
 
         }
