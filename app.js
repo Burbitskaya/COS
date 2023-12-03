@@ -11,10 +11,10 @@ const chart = new Chart(ctx, {
     }
 });
 
-const canvas0 = document.getElementById('Ampl');
-const ctx0 = canvas0.getContext('2d');
-const chart0 = new Chart(ctx0, {
-    type: 'bar',
+const canvasC = document.getElementById('Corr');
+const ctxC = canvasC.getContext('2d');
+const chartC = new Chart(ctxC, {
+    type: 'line',
     data: {
         labels: [],
         datasets: [],
@@ -24,18 +24,32 @@ const chart0 = new Chart(ctx0, {
     }
 });
 
-const canvas1 = document.getElementById('Faz');
-const ctx1 = canvas1.getContext('2d');
-const chart1 = new Chart(ctx1, {
-    type: 'bar',
-    data: {
-        labels: [],
-        datasets: [],
-    },
-    options: {
-        responsive: false, //Вписывать в размер canvas
-    }
-});
+//
+// const canvas0 = document.getElementById('Ampl');
+// const ctx0 = canvas0.getContext('2d');
+// const chart0 = new Chart(ctx0, {
+//     type: 'bar',
+//     data: {
+//         labels: [],
+//         datasets: [],
+//     },
+//     options: {
+//         responsive: false, //Вписывать в размер canvas
+//     }
+// });
+//
+// const canvas1 = document.getElementById('Faz');
+// const ctx1 = canvas1.getContext('2d');
+// const chart1 = new Chart(ctx1, {
+//     type: 'bar',
+//     data: {
+//         labels: [],
+//         datasets: [],
+//     },
+//     options: {
+//         responsive: false, //Вписывать в размер canvas
+//     }
+// });
 
 
 function Rebuild() {
@@ -517,14 +531,6 @@ function Smooth() {
 }
 
 
-let canvasIm = document.getElementById("im");
-let contextIm = canvasIm.getContext("2d");
-let img = new Image();
-img.src = "img.png";
-
-img.onload = function () {
-    contextIm.drawImage(img, 0, 0, 480, 640);
-};
 
 function Imagination(type) {
 
@@ -584,4 +590,125 @@ function Imagination(type) {
         }
     }
     contextIm.putImageData(imgd, 0, 0);
+}
+
+
+
+
+
+let canvasIm = document.getElementById("im");
+let contextIm = canvasIm.getContext("2d");
+let img = new Image();
+img.src = "img.png";
+
+img.onload = function () {
+    contextIm.drawImage(img, 0, 0, 480, 640);
+};
+
+
+let canvasIms = document.getElementById("ims");
+let contextIms = canvasIms.getContext("2d");
+let imgs = new Image();
+imgs.src = "img2.png";
+
+imgs.onload = function () {
+    contextIms.drawImage(imgs, 0, 0, 47 , 46);
+};
+
+function findImageInLargeImage(largeImage, smallImage) {
+    let largeImageData = contextIm.getImageData(0, 0,  480, 640).data;
+    let smallImageData = contextIms.getImageData(0, 0,  47, 46).data;
+    let pixLarge = largeImageData;
+    let pixSmall = smallImageData;
+
+    let brightnessLarge = [];
+    let brightnessSmall = [];
+
+    for (let i = 0; i < pixLarge.length; i += 4) {
+        const r = pixLarge[i];
+        const g = pixLarge[i + 1];
+        const b = pixLarge[i + 2];
+        const brightness = (r + g + b) / 3;
+        brightnessLarge.push(brightness);
+    }
+
+    for (let i = 0; i < pixSmall.length; i += 4) {
+        const r = pixSmall[i];
+        const g = pixSmall[i + 1];
+        const b = pixSmall[i + 2];
+        const brightness = (r + g + b) / 3;
+        brightnessSmall.push(brightness);
+    }
+
+    const newDataset = Array(brightnessSmall.length).fill(0)
+    const firstSignalData=[...newDataset, ...brightnessLarge, ...newDataset];
+    let correl = [];
+    console.log(correl);
+    for(let i=0; i<firstSignalData.length-brightnessSmall.length;i++){
+       let c= correlation(i,firstSignalData, brightnessSmall);
+       if(c){
+           c*=255;
+       }else{
+          c=0;
+        }
+        correl.push(c);
+    }
+console.log(correl);
+   brightnessLarge=correl.slice(brightnessSmall.length-1,firstSignalData.length-brightnessSmall.length-1);
+    const repeatedBrightnessLarge = brightnessLarge
+        .flatMap((brightness) => {
+                return [brightness, brightness, brightness, 255];
+        });
+
+    ctx0.clearRect(0, 0, canvas0.width, canvas0.height);
+    ctx0.putImageData(new ImageData( new Uint8ClampedArray(repeatedBrightnessLarge), 480, 640),0,0);
+
+
+}
+const canvas0 = document.getElementById('ims0');
+const ctx0 = canvas0.getContext('2d');
+
+function corr(){
+    if (chart.data.datasets.length > 0) {
+        const lastDataset = chart.data.datasets[chart.data.datasets.length - 1].data;
+        let start = document.getElementById("minC").value ? document.getElementById('minC').value:0;
+        let end = document.getElementById('maxC').value ? document.getElementById('maxC').value:lastDataset.length-1;
+        console.log(start);
+        const secondSignalData = lastDataset.slice(start, end);
+        const secondSignalLength = secondSignalData.length;
+        const newDataset = Array(secondSignalLength).fill(0)
+        const firstSignalData=[...newDataset, ...lastDataset, ...newDataset];
+        let correl = [];
+        for(let i=0; i<firstSignalData.length-secondSignalData.length;i++){
+            correl.push(correlation(i,firstSignalData, secondSignalData));
+        }
+
+        chartC.data.labels = Array.from({ length: correl.length }, (_, i) => i-secondSignalLength);
+        chartC.data.datasets = [
+            {
+                label: 'corel', //Метка
+                data: correl, //Данные
+                backgroundColor: 'red',
+            }]
+        chartC.update();
+    }
+}
+
+function correlation(j,firstSignalData, secondSignalData){
+    function calculateMean(array, start, end) {
+        const sum = array.slice(start, end + 1).reduce((acc, val) => acc + val, 0);
+        return sum / (end - start + 1);
+    }
+    const meanSecondSignal = secondSignalData.reduce((acc, val) => acc + val, 0) / secondSignalData.length;
+    const meanFirstSignal = calculateMean(firstSignalData, j, j + secondSignalData.length - 1);
+    let sum = 0;
+    let sum1 = 0;
+    let sum2 = 0;
+    for (let i =0; i < secondSignalData.length; i++) {
+        sum +=(firstSignalData[i+j]-meanFirstSignal)*(secondSignalData[i]-meanSecondSignal);
+        sum1+=Math.pow((firstSignalData[i+j]-meanFirstSignal),2)
+        sum2+=Math.pow((secondSignalData[i]-meanSecondSignal),2);
+    }
+    let div=Math.sqrt(sum1*sum2);
+    return sum/div;
 }
