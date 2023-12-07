@@ -532,8 +532,9 @@ function Smooth() {
 
 
 function Imagination(type) {
-
-    let imgd = contextIm.getImageData(0, 0, 480, 640);
+    const canvas = document.getElementById("im");
+    const contextIm = canvas.getContext("2d");
+    let imgd = contextIm.getImageData(0, 0, canvas.width, canvas.height);
     let pix = imgd.data;
     let width = imgd.width;
     let height = imgd.height;
@@ -589,42 +590,43 @@ function Imagination(type) {
         }
     }
     contextIm.putImageData(imgd, 0, 0);
+    canvas1Data = getCanvasData(contextIm, canvas.width, canvas.height);
 }
 
+let canvas1Data, canvas2Data, paddedCanvas1Data;
 
-let canvasIm = document.getElementById("im");
-let contextIm = canvasIm.getContext("2d");
-let img = new Image();
-img.src = "img.png";
-let canvas1Data,canvas2Data, paddedCanvas1Data;
+function handleImageS(event) {
+    const imageFileS = event.target.files[0];
+    const canvas = document.getElementById("ims");
+    const context = canvas.getContext("2d");
 
+    const img = new Image();
+    img.src = URL.createObjectURL(imageFileS);
+    img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas2Data = getCanvasData(context, canvas.width, canvas.height);
+    };
+}
 
-let canvasIms = document.getElementById("ims");
-let contextIms = canvasIms.getContext("2d");
-let imgs = new Image();
-imgs.src = "small_img.png";
+function handleImageL(event) {
+    const imageFileL = event.target.files[0];
+    const canvas = document.getElementById("im");
+    const context = canvas.getContext("2d");
 
-imgs.onload = function () {
-    contextIms.drawImage(imgs, 0, 0, 47, 46);
-    canvas2Data = getCanvasData(contextIms, canvasIms.width, canvasIms.height);
-    console.log(222);
-    if(paddedCanvas1Data){
-        Correlation2d();
-    }
-};
-
-img.onload = function () {
-    contextIm.drawImage(img, 0, 0, 480, 640);
-    canvas1Data = getCanvasData(contextIm,canvasIm.width,canvasIm.height );
-    paddedCanvas1Data = getCanvasDataWithPadding();
-    console.log(111);
-   if(canvas2Data){
-       Correlation2d();
-   }
-};
+    const img = new Image();
+    img.src = URL.createObjectURL(imageFileL);
+    img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas1Data = getCanvasData(context, canvas.width, canvas.height);
+    };
+}
 
 // Функция для получения данных из канваса
-function getCanvasData(ctx, width,height) {
+function getCanvasData(ctx, width, height) {
 
     const imageData = ctx.getImageData(0, 0, width, height);
     const pixels = imageData.data;
@@ -644,18 +646,14 @@ function getCanvasData(ctx, width,height) {
     return data;
 }
 
-// Получение данных из канвасов
-
-
-// Функция для получения данных из канваса с добавлением высоты и ширины
 function getCanvasDataWithPadding() {
     // Создание нового массива с добавленным отступом
     const paddedData = [];
-    let width=canvas1Data[0].length;
-    let height=canvas1Data.length;
+    let width = canvas1Data[0].length;
+    let height = canvas1Data.length;
 
-    let paddingw=canvas2Data[0].length;
-    let paddingh=canvas2Data.length;
+    let paddingw = canvas2Data[0].length;
+    let paddingh = canvas2Data.length;
     // Добавление верхнего отступа
     for (let i = 0; i < paddingh; i++) {
         const row = Array.from({length: width + paddingw * 2}).fill(0);
@@ -688,116 +686,144 @@ function getCanvasDataWithPadding() {
     return paddedData;
 }
 
-const workers = []; // Массив воркеров
-function Correlation2d() {
-    const numRows = paddedCanvas1Data.length - canvas2Data.length;
-    const numCols = paddedCanvas1Data[0].length - canvas2Data[0].length;
-    const numWorkers = 8; // Количество воркеров
+const numWorkers = 8;
+const workers = Array(numWorkers).fill(null);// Массив воркеров
 
-    const results = Array.from({ length: numRows }, () => Array(numCols).fill(null));; // Массив результатов
 
-    // Создание и инициализация воркеров
-    for (let i = 0; i < 8; i++) {
-        const worker = new Worker('calculateCorrelation.js', { canvas2Data, paddedCanvas1Data });
-        worker.postMessage({   paddedCanvas1Data,
-            canvas2Data,
-        });
-
-        worker.onmessage = function(event) {
-            results[event.data.i][event.data.j] = event.data.correlation;
-       //     console.log(event.data.i);
-            if (results.every(row => row.every(cell => cell !== null))) {
-                Draw(results);
-            }
-        };
-        workers.push(worker);
+const progressBar = document.getElementById('progress');
+function Stop2d(){
+    for (let i = 0; i < workers.length; i++) {
+        if(workers[i]) {
+            workers[i].terminate();
+            workers[i] = null;
+        }
     }
-console.log(workers);
-    // Распределение задач между воркерами
-    let workerIndex = 0;
-    for (let i = 0; i < numRows; i++) {
-        for (let j = 0; j < numCols; j++) {
-            const worker = workers[workerIndex];
-            worker.postMessage({    i,
-                j,
+    progressBar.setAttribute('value', 0);
+}
+
+function Correlation2d() {
+    Stop2d();
+        if (canvas1Data && canvas2Data) {
+            if (canvas2Data.length > canvas1Data.length || canvas2Data[0].length > canvas1Data[0].length) {
+                alert("Второе изображение должно быть больше первого");
+                return;
+            } else {
+                paddedCanvas1Data = getCanvasDataWithPadding();
+            }
+        } else {
+            alert("Загрузите изображения");
+            return;
+        }
+
+        const numRows = paddedCanvas1Data.length - canvas2Data.length;
+        const numCols = paddedCanvas1Data[0].length - canvas2Data[0].length;
+
+        progressBar.setAttribute('max', numRows * numCols);
+        progressBar.setAttribute('value', 0);
+
+
+        const results = Array.from({length: numRows}, () => Array(numCols).fill(null)); // Массив результатов
+    let n=0;
+        // Создание и инициализация воркеров
+        for (let i = 0; i < numWorkers; i++) {
+            const worker = new Worker('calculateCorrelation.js');
+            worker.postMessage({
+                paddedCanvas1Data,
+                canvas2Data,
             });
+
+            worker.onmessage = function (event) {
+                if(event.data.correlation!==undefined){
+                    n++;
+                    progressBar.setAttribute('value', n);
+                    results[event.data.i][event.data.j] = event.data.correlation;
+                    if(n===numRows*numCols){
+                        Draw(results);
+                    }
+                }
+            };
+            workers[i]=worker;
+        }
+        // Распределение задач между воркерами
+        let workerIndex = 0;
+        for (let i = 0; i < numRows; i++) {
+            for (let j = 0; j < numCols; j++) {
+                const worker = workers[workerIndex];
+                worker.postMessage({
+                    i,
+                    j,
+                });
+            }
             workerIndex = (workerIndex + 1) % numWorkers; // Переключение между воркерами
         }
     }
-}
 
-function Draw(result){
-    console.log(result);
-    canvas0.width = result[0].length;
-    canvas0.height = result.length;
-    const imageData = ctx0.createImageData(result[0].length, result.length);
-    const data = imageData.data;
+    function Draw(result) {
+        canvas0.width = result[0].length;
+        canvas0.height = result.length;
+        const imageData = ctx0.createImageData(result[0].length, result.length);
+        const data = imageData.data;
 
-    for (let i = 0; i < result.length; i++) {
-        for(let j = 0; j < result[0].length; j++) {
+        for (let i = 0; i < result.length; i++) {
+            for (let j = 0; j < result[0].length; j++) {
 
-            const pixelIndex = ((i * result[0].length) + j) * 4;
-            const value = result[i][j];
-            console.log(pixelIndex);
-            data[pixelIndex] = value; // Красный канал
-            data[pixelIndex + 1] = value; // Зеленый канал
-            data[pixelIndex + 2] = value; // Синий канал
-            data[pixelIndex + 3] = 255; // Альфа-канал
+                const pixelIndex = ((i * result[0].length) + j) * 4;
+                const value = result[i][j];
+                data[pixelIndex] = value; // Красный канал
+                data[pixelIndex + 1] = value; // Зеленый канал
+                data[pixelIndex + 2] = value; // Синий канал
+                data[pixelIndex + 3] = 255; // Альфа-канал
+            }
+        }
+
+        ctx0.putImageData(imageData, 0, 0);
+    }
+
+    const canvas0 = document.getElementById('ims0');
+    const ctx0 = canvas0.getContext('2d');
+
+    function corr() {
+        if (chart.data.datasets.length > 0) {
+            const lastDataset = chart.data.datasets[chart.data.datasets.length - 1].data;
+            let start = document.getElementById("minC").value ? document.getElementById('minC').value : 0;
+            let end = document.getElementById('maxC').value ? document.getElementById('maxC').value : lastDataset.length - 1;
+
+            const secondSignalData = lastDataset.slice(start, end);
+            const secondSignalLength = secondSignalData.length;
+            const newDataset = Array(secondSignalLength).fill(0)
+            const firstSignalData = [...newDataset, ...lastDataset, ...newDataset];
+            let correl = [];
+            for (let i = 0; i < firstSignalData.length - secondSignalData.length; i++) {
+                correl.push(correlation(i, firstSignalData, secondSignalData));
+            }
+            chartC.data.labels = Array.from({length: correl.length}, (_, i) => i - secondSignalLength);
+            chartC.data.datasets = [
+                {
+                    label: 'corel', //Метка
+                    data: correl, //Данные
+                    backgroundColor: 'red',
+                }]
+            chartC.update();
         }
     }
 
 
-    ctx0.putImageData(imageData, 0, 0);
-}
-
-const canvas0 = document.getElementById('ims0');
-const ctx0 = canvas0.getContext('2d');
-
-function corr() {
-    if (chart.data.datasets.length > 0) {
-        const lastDataset = chart.data.datasets[chart.data.datasets.length - 1].data;
-        let start = document.getElementById("minC").value ? document.getElementById('minC').value : 0;
-        let end = document.getElementById('maxC').value ? document.getElementById('maxC').value : lastDataset.length - 1;
-
-        const secondSignalData = lastDataset.slice(start, end);
-        const secondSignalLength = secondSignalData.length;
-        const newDataset = Array(secondSignalLength).fill(0)
-        const firstSignalData = [...newDataset, ...lastDataset, ...newDataset];
-        let correl = [];
-        for (let i = 0; i < firstSignalData.length - secondSignalData.length; i++) {
-            correl.push(correlation(i, firstSignalData, secondSignalData));
+    function correlation(j, firstSignalData, secondSignalData) {
+        function calculateMean(array, start, end) {
+            const sum = array.slice(start, end + 1).reduce((acc, val) => acc + val, 0);
+            return sum / (end - start + 1);
         }
 
-        chartC.data.labels = Array.from({length: correl.length}, (_, i) => i - secondSignalLength);
-        chartC.data.datasets = [
-            {
-                label: 'corel', //Метка
-                data: correl, //Данные
-                backgroundColor: 'red',
-            }]
-        chartC.update();
+        const meanSecondSignal = secondSignalData.reduce((acc, val) => acc + val, 0) / secondSignalData.length;
+        const meanFirstSignal = calculateMean(firstSignalData, j, j + secondSignalData.length - 1);
+        let sum = 0;
+        let sum1 = 0;
+        let sum2 = 0;
+        for (let i = 0; i < secondSignalData.length; i++) {
+            sum += (firstSignalData[i + j] - meanFirstSignal) * (secondSignalData[i] - meanSecondSignal);
+            sum1 += Math.pow((firstSignalData[i + j] - meanFirstSignal), 2)
+            sum2 += Math.pow((secondSignalData[i] - meanSecondSignal), 2);
+        }
+        let div = Math.sqrt(sum1 * sum2);
+        return sum / div;
     }
-}
-
-
-
-
-function correlation(j, firstSignalData, secondSignalData) {
-    function calculateMean(array, start, end) {
-        const sum = array.slice(start, end + 1).reduce((acc, val) => acc + val, 0);
-        return sum / (end - start + 1);
-    }
-
-    const meanSecondSignal = secondSignalData.reduce((acc, val) => acc + val, 0) / secondSignalData.length;
-    const meanFirstSignal = calculateMean(firstSignalData, j, j + secondSignalData.length - 1);
-    let sum = 0;
-    let sum1 = 0;
-    let sum2 = 0;
-    for (let i = 0; i < secondSignalData.length; i++) {
-        sum += (firstSignalData[i + j] - meanFirstSignal) * (secondSignalData[i] - meanSecondSignal);
-        sum1 += Math.pow((firstSignalData[i + j] - meanFirstSignal), 2)
-        sum2 += Math.pow((secondSignalData[i] - meanSecondSignal), 2);
-    }
-    let div = Math.sqrt(sum1 * sum2);
-    return sum / div;
-}

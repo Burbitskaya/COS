@@ -32,24 +32,24 @@
 </div>
 <div class="cht">
     <div>
-        <canvas id="Chart" width="500" height="500"></canvas>
+        <canvas id="Chart" width="700" height="500"></canvas>
     </div>
-        <div>
-<!--            <form>-->
-<!--                <h2>Сглаживание:</h2>-->
-<!--                <select id="smooth" required>-->
-<!--                    <option value="0">Скользящее усреднение</option>-->
-<!--                    <option value="1">Параболой</option>-->
-<!--                    <option value="2">Медианное усреднение</option>-->
-<!--                </select>-->
-<!--                <label for="N">Размер окна: </label>-->
-<!--                <input type="number" id="window1" step="1" min="1" value="31" required>-->
-<!--                <label for="N">К для медианного усреднения: </label>-->
-<!--                <input type="number" id="medK" step="1" min="1" value="3" required>-->
-<!--            </form>-->
-<!--            <button onclick="Smooth()">Применить</button>-->
-            <canvas id="Corr" width="500" height="500"></canvas>
-        </div>
+    <div>
+        <!--            <form>-->
+        <!--                <h2>Сглаживание:</h2>-->
+        <!--                <select id="smooth" required>-->
+        <!--                    <option value="0">Скользящее усреднение</option>-->
+        <!--                    <option value="1">Параболой</option>-->
+        <!--                    <option value="2">Медианное усреднение</option>-->
+        <!--                </select>-->
+        <!--                <label for="N">Размер окна: </label>-->
+        <!--                <input type="number" id="window1" step="1" min="1" value="31" required>-->
+        <!--                <label for="N">К для медианного усреднения: </label>-->
+        <!--                <input type="number" id="medK" step="1" min="1" value="3" required>-->
+        <!--            </form>-->
+        <!--            <button onclick="Smooth()">Применить</button>-->
+        <canvas id="Corr" width="700" height="500"></canvas>
+    </div>
 </div>
 <div>
     <button onclick="Sum()">Суммировать</button>
@@ -57,64 +57,76 @@
 </div>
 <div>
     <div class="cht">
-    <div>
-<!--        <form>-->
-<!--            <h2>Восстановление:</h2>-->
-<!--            <label for="K">K: </label>-->
-<!--            <input type="number" id="K" step="1" min="8" value="32" required>-->
-<!--        </form>-->
-<!--        <button onclick="Rebuild()">Восстановить сигнал</button>-->
-        <form>
-                    <input type="number" id="minC" >
-                    <input type="number" id="maxC">
-        </form>
-        <button onclick="corr()">Корреляция</button>
-    </div>
-<!--    <div>-->
-<!--        <form>-->
-<!--            <h2>Фильтрация:</h2>-->
-<!--            <label for="N">Min:</label>-->
-<!--            <input type="number" id="minF" step="1" min="1" required>-->
-<!--            <label for="N">Max:</label>-->
-<!--            <input type="number" id="maxF" step="1" min="1" required>-->
-<!--        </form>-->
-<!--    </div>-->
-<!--    </div>-->
-<!--    <div class="amplfaz">-->
-<!--        <div>-->
+        <div>
+            <!--        <form>-->
+            <!--            <h2>Восстановление:</h2>-->
+            <!--            <label for="K">K: </label>-->
+            <!--            <input type="number" id="K" step="1" min="8" value="32" required>-->
+            <!--        </form>-->
+            <!--        <button onclick="Rebuild()">Восстановить сигнал</button>-->
+            <form>
+                <input type="number" id="minC">
+                <input type="number" id="maxC">
+            </form>
+            <button onclick="corr()">Корреляция</button>
+        </div>
+        <!--    <div>-->
+        <!--        <form>-->
+        <!--            <h2>Фильтрация:</h2>-->
+        <!--            <label for="N">Min:</label>-->
+        <!--            <input type="number" id="minF" step="1" min="1" required>-->
+        <!--            <label for="N">Max:</label>-->
+        <!--            <input type="number" id="maxF" step="1" min="1" required>-->
+        <!--        </form>-->
+        <!--    </div>-->
+        <!--    </div>-->
+        <!--    <div class="amplfaz">-->
+        <!--        <div>-->
 
-<!--        </div>-->
-<!--        <div>-->
-<!--            <table id="myTable">-->
-<!--                <tbody>-->
-<!--                <tr>-->
-<!--                    <td>realPart</td>-->
-<!--                    <td>imagPart</td>-->
-<!--                </tr>-->
-<!--                </tbody>-->
-<!--            </table>-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <canvas id="Faz" width="1000" height="500"></canvas>-->
-<!--            <canvas id="Ampl" width="1000" height="500"></canvas>-->
-<!--        </div>-->
-  </div>
+        <!--        </div>-->
+        <!--        <div>-->
+        <!--            <table id="myTable">-->
+        <!--                <tbody>-->
+        <!--                <tr>-->
+        <!--                    <td>realPart</td>-->
+        <!--                    <td>imagPart</td>-->
+        <!--                </tr>-->
+        <!--                </tbody>-->
+        <!--            </table>-->
+        <!--        </div>-->
+        <!--        <div>-->
+        <!--            <canvas id="Faz" width="1000" height="500"></canvas>-->
+        <!--            <canvas id="Ampl" width="1000" height="500"></canvas>-->
+        <!--        </div>-->
+    </div>
 
 </div>
 <div>
-    <h2>Ядра</h2>
+    <h1>Изображение</h1>
     <div class="cht">
-    <button onclick="Imagination(0)">Блюр</button>
-    <button onclick="Imagination(1)">Негатив</button>
-    <button onclick="Imagination(2)">Резкость</button>
-    <button onclick="Imagination(3)">Рельеф</button>
+        <button onclick="Imagination(0)">Блюр</button>
+        <button onclick="Imagination(1)">Негатив</button>
+        <button onclick="Imagination(2)">Резкость</button>
+        <button onclick="Imagination(3)">Рельеф</button>
     </div>
+    <div class="cht">
+    <input type="file" id="imageFileL" onchange="handleImageL(event)">
+    <input type="file" id="imageFileS" onchange="handleImageS(event)">
+    <button onclick="Correlation2d()">Применить корреляцию</button>
+    <button onclick="Stop2d()">Остановить</button>
+        </div>
+    <progress id="progress" value="0"></progress>
     <h2>
-    <canvas id="im" height="640" width="480"></canvas>
-        <canvas id="ims" height="46" width="47"></canvas>
-        <canvas id="ims0"></canvas>
+        <div>
+            <canvas id="im"></canvas>
+        </div>
+        <div>
+            <canvas id="ims"></canvas>
+        </div>
+        <div>
+            <canvas id="ims0"></canvas>
+        </div>
     </h2>
-    <button onclick="Correlation2d()">Корреляция</button>
 </div>
 <script src="app.js"></script>
 </body>

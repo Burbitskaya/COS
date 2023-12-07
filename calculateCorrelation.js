@@ -43,8 +43,8 @@ function calculatePearsonCorrelation(i, j) {
     // Вычисление корреляции Пирсона
     const div=Math.sqrt(sumSquareDeviations1 * sumSquareDeviations2);
 
-    if(div!==0){
-        return (Math.abs((sumProdDeviations / div)*255) );
+    if(div>0){
+            return (Math.abs((sumProdDeviations / div) * 255));
     }
     else return 0;
 
